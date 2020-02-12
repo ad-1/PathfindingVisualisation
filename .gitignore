@@ -1,0 +1,5 @@
+# ignore venv
+venv/
+
+# ignore temp files
+temp.txt
