@@ -1,4 +1,4 @@
-# Dijakstra's Algorithm - Shortest Path
+# Depth First Search
 
 
 class DFS:
