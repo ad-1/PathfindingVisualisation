@@ -18,6 +18,7 @@ class Node:
         self.is_start = False
         self.is_finish = False
         self.is_wall = False
+        self.in_queue = False
         self.visited = False
         self.visiting = False
         self.in_path = False
