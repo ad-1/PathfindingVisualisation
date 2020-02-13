@@ -10,3 +10,7 @@ Graph traversal algorithms visualised in Python using Tkinter.
 
 <img src="https://he-s3.s3.amazonaws.com/media/uploads/9fa1119.jpg" alt="DFS" width="350" />
 
+
+## Breadth First Search
+
+<img src="https://he-s3.s3.amazonaws.com/media/uploads/fdec3c2.jpg" alt="BFS" width="350" />
