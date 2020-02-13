@@ -1,11 +1,11 @@
 # Dijakstra's Algorithm - Shortest Path
 
-from math import inf
-
 
 class DFS:
 
     def __init__(self, nodes, start_node, fin_node, root):
+        """ initialize solver """
+
         self.subscriber = root
         self.nodes = nodes
         self.adjacency_list = self.get_adj_list()
@@ -35,6 +35,8 @@ class DFS:
         return adjacency_list
 
     def dfs(self, node):
+        """ depth first search algorithm """
+
         if node == self.fin_node:
             return True
         if not node.visited:
@@ -50,6 +52,8 @@ class DFS:
         return False
 
     def backtrack(self):
+        """ backtrack through path to finish node """
+
         for node in reversed(self.path):
             node.in_path = True
             self.dispatch(node)

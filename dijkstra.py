@@ -91,12 +91,15 @@ class Dijkstra:
         return min(self.priority_queue, key=self.priority_queue.get)
 
     def backtrack(self):
+        """ backtrack through path info to find shortest path to finish node """
         node = self.fin_node
 
         while node != self.start_node:
             node.in_path = True
-            self.dispatch(node)
             prev_node = self.path_info[node][self.prev_node_key]
             self.shortest_path.append(prev_node)
             node = prev_node
+
+        for node in reversed(self.shortest_path):
+            self.dispatch(node)
 
