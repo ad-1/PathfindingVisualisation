@@ -3,6 +3,7 @@
 import tkinter as tk
 from node import Node
 from dijkstra import Dijkstra
+from depth_fist_search import DFS
 from math import inf
 import time
 import random
@@ -11,7 +12,13 @@ import random
 class Graph:
 
     def __init__(self, px_width, px_height, px_cell_width):
-        """ initialize graph GUI """
+        """
+            initialize graph GUI
+
+            solver modes:
+            0 = dijkstra
+            1 = depth first search
+        """
 
         self.cell_width = px_cell_width
         self.n_cols = px_width // px_cell_width
@@ -24,14 +31,15 @@ class Graph:
         self.finish_node = None
         self.is_solving = False
         self.last_rendered_node = None
-        self.mode = 0
+        self.draw_mode = 0
+        self.solve_mode = 'd'
         self.config_canvas()
         self.root.mainloop()
 
     def config_root(self):
         """ configure the canvas root """
 
-        self.root.title('Dijkstra')
+        self.root.title('Graph Traversal')
         self.root.resizable(False, False)
         self.root.bind('<Key>', self.key_press_event)
 
@@ -102,13 +110,17 @@ class Graph:
 
         kp = repr(event.keysym)
         if kp == '\'1\'':
-            self.mode = 1
+            self.draw_mode = 1
         elif kp == '\'2\'':
-            self.mode = 2
+            self.draw_mode = 2
         elif kp == '\'3\'':
-            self.mode = 3
+            self.draw_mode = 3
         elif kp == '\'space\'':
             self.validate_graph()
+        elif kp == '\'k\'':
+            self.solve_mode = 'k'
+        elif kp == '\'d\'':
+            self.solve_mode = 'd'
         elif kp == '\'r\'':
             self.reconfig_canvas()
 
@@ -126,13 +138,13 @@ class Graph:
         for row in self.nodes:
             for node in row:
                 if node.x1 <= event.x <= node.x2 and node.y1 <= event.y <= node.y2:
-                    if self.mode == 1:
+                    if self.draw_mode == 1:
                         self.update_start_node(node)
                         return
-                    elif self.mode == 2:
+                    elif self.draw_mode == 2:
                         self.update_finish_node(node)
                         return
-                    elif self.mode == 3:
+                    elif self.draw_mode == 3:
                         self.update_wall(node)
                         return
 
@@ -184,7 +196,10 @@ class Graph:
         """ solve using dijkstra's algorithm """
 
         self.is_solving = True
-        Dijkstra(self.nodes, self.start_node, self.finish_node, self)
+        if self.solve_mode == 'k':
+            Dijkstra(self.nodes, self.start_node, self.finish_node, self)
+        elif self.solve_mode == 'd':
+            DFS(self.nodes, self.start_node, self.finish_node, self)
         self.is_solving = False
 
     def update_root(self, node):
