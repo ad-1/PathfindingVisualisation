@@ -4,6 +4,7 @@ import tkinter as tk
 from node import Node
 from dijkstra import Dijkstra
 from depth_fist_search import DFS
+from breadth_first_search import BFS
 from math import inf
 import time
 import random
@@ -26,13 +27,14 @@ class Graph:
         self.root = tk.Tk()
         self.config_root()
         self.canvas = tk.Canvas(self.root, height=px_height, width=px_width, bg='#ffffff')
+        self.random_maze = True
         self.nodes = [[None for _ in range(0, px_width, self.cell_width)] for _ in range(0, px_height, self.cell_width)]
         self.start_node = None
         self.finish_node = None
         self.is_solving = False
         self.last_rendered_node = None
         self.draw_mode = 0
-        self.solve_mode = 'd'
+        self.solve_mode = 'b'
         self.config_canvas()
         self.root.mainloop()
 
@@ -52,17 +54,6 @@ class Graph:
         self.canvas.bind('<B1-Motion>', self.node_op)
         # self.canvas.bind('<ButtonRelease-1>', self.node_op)
 
-    def render_grid(self, event=None):
-        """ draw grid lines on canvas (not used) """
-
-        w = self.canvas.winfo_width()
-        h = self.canvas.winfo_height()
-
-        for i in range(0, w, self.cell_width):
-            self.canvas.create_line([(i, 0), (i, h)], tag='grid_line')
-        for i in range(0, h, self.cell_width):
-            self.canvas.create_line([(0, i), (w, i)], tag='grid_line')
-
     def config_nodes(self, event=None):
         """ configure all nodes on the graph """
 
@@ -76,7 +67,7 @@ class Graph:
                 x2 = x1 + self.cell_width
                 node = Node(x1, y1, x2, y2, i, j, idx)
                 self.nodes[i][j] = node
-                if random.uniform(0, 1) > 0.7:
+                if self.random_maze and random.uniform(0, 1) > 0.7:
                     node.is_wall = True
                 self.render_node(node)
                 idx += 1
@@ -93,6 +84,8 @@ class Graph:
             color = '#ff0000'
         elif node.in_path:
             color = '#ffff00'
+        elif node.in_queue:
+            color = '#E2B8FF'
         elif node.visited:
             color = '#add8e6'
         elif node.visiting:
@@ -121,6 +114,8 @@ class Graph:
             self.solve_mode = 'k'
         elif kp == '\'d\'':
             self.solve_mode = 'd'
+        elif kp == '\'b\'':
+            self.solve_mode = 'b'
         elif kp == '\'r\'':
             self.reconfig_canvas()
 
@@ -200,6 +195,8 @@ class Graph:
             Dijkstra(self.nodes, self.start_node, self.finish_node, self)
         elif self.solve_mode == 'd':
             DFS(self.nodes, self.start_node, self.finish_node, self)
+        elif self.solve_mode == 'b':
+            BFS(self.nodes, self.start_node, self.finish_node, self)
         self.is_solving = False
 
     def update_root(self, node):
@@ -212,6 +209,8 @@ class Graph:
             time.sleep(0.01)
 
     def reconfig_canvas(self):
+        """ refresh gui """
+
         if not self.is_solving:
             self.config_nodes()
 
