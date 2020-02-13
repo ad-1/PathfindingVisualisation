@@ -22,4 +22,4 @@ class Node:
         self.visiting = False
         self.in_path = False
         self.cost = 1
-        self.connections = [(self.row - 1, self.col), (self.row + 1, self.col), (self.row, self.col + 1), (self.row, self.col - 1)]
+        self.connections = [(self.row - 1, self.col), (self.row, self.col + 1), (self.row + 1, self.col), (self.row, self.col - 1)]
