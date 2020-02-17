@@ -1,7 +1,10 @@
 # Graph Traversal
 
 Graph traversal pathfinding algorithms visualised in Python using Tkinter. Algorithms include Breadth First Search (BFS), Depth First Search (DFS), Dijkstra's Algorithm and A*.
-(Images are for illustrative purposes only)
+
+<img src="https://raw.githubusercontent.com/ad-1/GraphTraversal/master/images/gui.png" alt="gui" width="600" />
+
+The following images are for illustrative purposes only.
 
 ## Breadth First Search
 
