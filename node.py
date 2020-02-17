@@ -13,7 +13,7 @@ class Node:
         self.row, self.col = row, col
         self.idx = idx
         self.cost = 1
-        self._state = State.normal
+        self._state = State.NORMAL
         self.connections = [(self.row - 1, self.col),
                             (self.row, self.col + 1),
                             (self.row + 1, self.col),
