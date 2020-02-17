@@ -43,7 +43,7 @@ class Dijkstra:
                 for c in node.connections:
                     if 0 <= c[0] < len(self.nodes) and 0 <= c[1] < len(self.nodes[0]):
                         edge = self.nodes[c[0]][c[1]]
-                        if edge.state == State.wall:
+                        if edge.state == State.WALL:
                             continue
                         adjacency_list.setdefault(node, {edge}).add(edge)
         return adjacency_list, path_info
@@ -64,18 +64,18 @@ class Dijkstra:
         while self.finish_node != self.get_next_priority():
             if node is None or node not in self.adjacency_list:
                 return False
-            progress_state(node, self.state_consts, State.visiting, self.render_delay)
+            progress_state(node, self.state_consts, State.VISITING, self.render_delay)
             self.priority_queue.pop(node, None)
             edges = self.adjacency_list[node]
             self.relaxation(node, edges)
-            progress_state(node, self.state_consts, State.visited, self.render_delay)
+            progress_state(node, self.state_consts, State.VISITED, self.render_delay)
             node = self.get_next_priority()
         return True
 
     def relaxation(self, node, edges):
         """ update distance array """
         for edge in edges:
-            if edge.state == State.visited:
+            if edge.state == State.VISITED:
                 continue
             if self.a_star:
                 new_dist = edge.cost + self.path_info[edge][self.heuristic_key]
@@ -105,4 +105,4 @@ class Dijkstra:
 
     def visualise_path(self):
         for node in reversed(self.shortest_path):
-            progress_state(node, self.state_consts, State.path, self.render_delay)
+            progress_state(node, self.state_consts, State.PATH, self.render_delay)
