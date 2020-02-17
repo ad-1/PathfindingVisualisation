@@ -2,6 +2,7 @@
 
 from math import inf
 from state import State
+from helpers.progress_state import progress_state
 
 
 class Dijkstra:
@@ -12,21 +13,21 @@ class Dijkstra:
         self.nodes = nodes
         self.start_node = start_node
         self.finish_node = finish_node
+        self.state_consts = [start_node, finish_node]
         self.prev_node_key = 'prev_node'
         self.distance_key = 'distance'
         self.heuristic_key = 'manhattan'
         self.a_star = a_star
-        if a_star:
-            self.priority_queue = {}
-        else:
-            self.priority_queue = {start_node: 0}
+        self.priority_queue = {start_node: 0}
         self.adjacency_list, self.path_info = self.init_dijkstra()
         self.path_info[start_node][self.prev_node_key] = None
         self.path_info[start_node][self.distance_key] = 0
         self.path_info[start_node][self.heuristic_key] = self.manhattan_distance(start_node)
         self.shortest_path = []
+        self.render_delay = 0.01
         if self.dijkstra(start_node):
             self.backtrack()
+            self.visualise_path()
 
     def dispatch(self, node):
         """ dispatch node info """
@@ -60,16 +61,14 @@ class Dijkstra:
 
     def dijkstra(self, node):
         """ dijkstra and s-star algorithm implementation """
-        while self.finish_node != self.get_next_priority():  # while none != self.finish_node:
+        while self.finish_node != self.get_next_priority():
             if node is None or node not in self.adjacency_list:
                 return False
-            node.state = State.visiting
-            self.dispatch(node)
-            self.priority_queue.pop(node, None)  # del self.priority_queue[node]
+            progress_state(node, self.state_consts, State.visiting, self.render_delay)
+            self.priority_queue.pop(node, None)
             edges = self.adjacency_list[node]
             self.relaxation(node, edges)
-            node.state = State.visited
-            self.dispatch(node)
+            progress_state(node, self.state_consts, State.visited, self.render_delay)
             node = self.get_next_priority()
         return True
 
@@ -84,7 +83,10 @@ class Dijkstra:
                 new_dist = edge.cost + self.path_info[node][self.distance_key]
             if new_dist < self.path_info[edge][self.distance_key]:
                 self.path_info[edge][self.prev_node_key] = node
-                self.path_info[edge][self.distance_key] = new_dist
+                if self.a_star:
+                    self.path_info[edge][self.heuristic_key] = new_dist
+                else:
+                    self.path_info[edge][self.distance_key] = new_dist
                 self.priority_queue[edge] = new_dist
 
     def get_next_priority(self):
@@ -97,9 +99,10 @@ class Dijkstra:
         """ backtrack through path info to find shortest path to finish node """
         node = self.finish_node
         while node != self.start_node:
-            node.state = State.path
             prev_node = self.path_info[node][self.prev_node_key]
             self.shortest_path.append(prev_node)
             node = prev_node
+
+    def visualise_path(self):
         for node in reversed(self.shortest_path):
-            self.dispatch(node)
+            progress_state(node, self.state_consts, State.path, self.render_delay)
