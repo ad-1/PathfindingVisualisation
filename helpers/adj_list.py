@@ -14,7 +14,7 @@ def get_adj_list(nodes):
             for c in node.connections:
                 if 0 <= c[0] < len(nodes) and 0 <= c[1] < len(nodes[0]):
                     edge = nodes[c[0]][c[1]]
-                    if edge.state == State.wall:
+                    if edge.state == State.WALL:
                         continue
                     adjl.setdefault(node, [edge]).append(edge)
     return adjl
