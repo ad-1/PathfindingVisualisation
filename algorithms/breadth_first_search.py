@@ -7,7 +7,7 @@ from state import State
 
 class BFS:
 
-    def __init__(self, nodes, recursive, start_node, finish_node, root):
+    def __init__(self, nodes, recursive, start_node, finish_node, root, animate=False):
         """ initialise bredth first search solver """
         self.subscriber = root
         self.nodes = nodes
@@ -18,7 +18,10 @@ class BFS:
         self.prev = {}
         self.path = []
         self.queue = [start_node]
-        self.render_delay = 0.001
+        if animate:
+            self.render_delay = 0.01
+        else:
+            self.render_delay = 0
         if recursive:
             self.bfs_recursive(start_node)
         else:

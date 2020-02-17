@@ -7,7 +7,7 @@ from helpers.progress_state import progress_state
 
 class Dijkstra:
 
-    def __init__(self, nodes, a_star, start_node, finish_node, root):
+    def __init__(self, nodes, a_star, start_node, finish_node, root, animate=False):
         """ initialize solver """
         self.subscriber = root
         self.nodes = nodes
@@ -24,7 +24,10 @@ class Dijkstra:
         self.path_info[start_node][self.distance_key] = 0
         self.path_info[start_node][self.heuristic_key] = self.manhattan_distance(start_node)
         self.shortest_path = []
-        self.render_delay = 0.01
+        if animate:
+            self.render_delay = 0.01
+        else:
+            self.render_delay = 0
         if self.dijkstra(start_node):
             self.backtrack()
             self.visualise_path()
@@ -49,18 +52,18 @@ class Dijkstra:
         return adjacency_list, path_info
 
     def pythagoras(self, node):
-        """ pythagorean theorem - heuristic """
+        """ euclidean distance - A* heuristic """
         a = node.col - self.finish_node.col
         b = node.row - self.finish_node.row
         c = ((a ** 2) + (b ** 2)) ** (1/2) * 1000
         return c
 
     def manhattan_distance(self, node):
-        """ manhattan distance - heuristic """
+        """ manhattan distance - A* heuristic """
         return abs(self.finish_node.col - node.col) + abs(self.finish_node.row - node.row)
 
     def dijkstra(self, node):
-        """ dijkstra and s-star algorithm implementation """
+        """ dijkstra and a* algorithm implementation """
         while self.finish_node != self.get_next_priority():
             if node is None or node not in self.adjacency_list:
                 return False

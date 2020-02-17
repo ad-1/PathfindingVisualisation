@@ -7,7 +7,7 @@ from state import State
 
 class DFS:
 
-    def __init__(self, nodes, recursive, start_node, finish_node, root):
+    def __init__(self, nodes, recursive, start_node, finish_node, root, animate=False):
         """ initialise dfs solver """
         self.subscriber = root
         self.nodes = nodes
@@ -17,7 +17,10 @@ class DFS:
         self.start_node = start_node
         self.finish_node = finish_node
         self.state_consts = [start_node, finish_node]
-        self.render_delay = 0.01
+        if animate:
+            self.render_delay = 0.01
+        else:
+            self.render_delay = 0
         self.recursive = recursive
         if recursive:
             if self.dfs_recursive(start_node):
