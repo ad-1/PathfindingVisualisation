@@ -23,10 +23,11 @@ class Graph:
         """ Init graphical user interface for pathfinding """
 
         self.algorithms = ['Breadth First Search', 'BFS Recursive', 'Depth First Search', 'DFS Recursive', 'Dijkstra', 'A*']
-        self.solve_mode = 3
+        self.solve_mode = 0
         self.draw_modes = [1, 2, 3]
         self.draw_mode = 1
         self.is_solving = False
+        self.solved = False
         self.last_rendered_node = None
         self.start_node = None
         self.finish_node = None
@@ -35,7 +36,7 @@ class Graph:
         self.graph_width = 1220
         self.graph_height = 850
         self.canvas = tk.Canvas(self.root, height=self.graph_height + 50, width=self.graph_width, bg='#333333')
-        self.node_size = 50
+        self.node_size = 20
         self.n_cols = None
         self.n_rows = None
         self.nodes = None
@@ -102,6 +103,7 @@ class Graph:
         """ reset node back to initial state """
         if self.is_solving:
             return
+        self.solved = False
         self.reset_stored_nodes()
         for node in self.flat_nodes:
             progress_state(node, [], State.NORMAL, self.render_delay)
@@ -110,6 +112,7 @@ class Graph:
         """ clear all walls from graph """
         if self.is_solving:
             return
+        self.solved = False
         for node in self.flat_nodes:
             if node.state == State.WALL:
                 progress_state(node, [], State.NORMAL, self.render_delay)
@@ -118,6 +121,7 @@ class Graph:
         """ clear any nodes in last iteration """
         if self.is_solving:
             return
+        self.solved = False
         for node in self.flat_nodes:
             if node.state == State.VISITED or \
                     node.state == State.VISITING or \
@@ -245,7 +249,7 @@ class Graph:
         elif kp == '\'n\'':
             self.clear_walls()
         elif kp == '\'space\'':
-            self.validate_graph()
+            self.validate_graph(True)
 
     def render_node(self, node, render_time):
         """ draw node on canvas """
@@ -284,6 +288,8 @@ class Graph:
             progress_state(self.start_node, [self.finish_node], State.NORMAL, self.render_delay)
         progress_state(node, [self.finish_node], State.START, self.render_delay)
         self.start_node = node
+        if self.solved:
+            self.validate_graph(False)
 
     def update_finish(self, node):
         """ update finishing node """
@@ -291,6 +297,8 @@ class Graph:
             progress_state(self.finish_node, [self.start_node], State.NORMAL, self.render_delay)
         progress_state(node, [self.start_node], State.FINISH, self.render_delay)
         self.finish_node = node
+        if self.solved:
+            self.validate_graph(False)
 
     @staticmethod
     def update_wall(node):
@@ -299,22 +307,23 @@ class Graph:
             node.state = (State.WALL, 0) if node.state != State.WALL else (State.NORMAL, 0)
             node.cost = inf if node.cost == 1 else inf
 
-    def validate_graph(self):
+    def validate_graph(self, animate=True):
         """ validate the graph is ready to be solved """
         if self.start_node is not None and self.finish_node is not None:
-            self.visualise_pathfinding()
+            self.visualise_pathfinding(animate)
 
-    def visualise_pathfinding(self):
+    def visualise_pathfinding(self, animate):
         """ solve using selected algorithm """
         self.clear_path()
         self.is_solving = True
         if self.solve_mode == 0 or self.solve_mode == 1:
             bfs_recursive = True if self.solve_mode == 1 else False
-            BFS(self.nodes, bfs_recursive, self.start_node, self.finish_node, self)
+            BFS(self.nodes, bfs_recursive, self.start_node, self.finish_node, self, animate)
         elif self.solve_mode == 2 or self.solve_mode == 3:
             dfs_recursive = True if self.solve_mode == 3 else False
-            DFS(self.nodes, dfs_recursive, self.start_node, self.finish_node, self)
+            DFS(self.nodes, dfs_recursive, self.start_node, self.finish_node, self, animate)
         elif self.solve_mode == 4 or self.solve_mode == 5:
             a_star = True if self.solve_mode == 5 else False
-            Dijkstra(self.nodes, a_star, self.start_node, self.finish_node, self)
+            Dijkstra(self.nodes, a_star, self.start_node, self.finish_node, self, animate)
         self.is_solving = False
+        self.solved = True
