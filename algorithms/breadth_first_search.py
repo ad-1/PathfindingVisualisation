@@ -7,7 +7,7 @@ from state import State
 
 class BFS:
 
-    def __init__(self, nodes, start_node, finish_node, root):
+    def __init__(self, nodes, recursive, start_node, finish_node, root):
         """ initialise bredth first search solver """
         self.subscriber = root
         self.nodes = nodes
@@ -16,35 +16,58 @@ class BFS:
         self.state_consts = [start_node, finish_node]
         self.adjacency_list = get_adj_list(nodes)
         self.prev = {}
+        self.path = []
         self.queue = [start_node]
         self.render_delay = 0.001
-        self.bfs_recursive(start_node, finish_node)
+        if recursive:
+            self.bfs_recursive(start_node)
+        else:
+            self.bfs()
         self.backtrack(finish_node)
+        self.visualise_path()
 
     def bfs(self):
-        pass
+        """ breadth first search iterative """
+        node = self.queue[-1]
+        while node != self.finish_node and node in self.adjacency_list:
+            progress_state(node, self.state_consts, State.VISITING, self.render_delay)
+            for edge in self.adjacency_list[node]:
+                if edge.state == State.VISITED or edge.state == State.QUEUE:
+                    continue
+                self.prev[edge] = node
+                self.queue.append(edge)
+                progress_state(edge, self.state_consts, State.QUEUE, self.render_delay)
+            self.queue.pop(0)
+            progress_state(node, self.state_consts, State.VISITED, self.render_delay)
+            if not self.queue:
+                break
+            node = self.queue[0]
 
-    def bfs_recursive(self, s, e):
-        """ find shortest path to e from s """
-        if s == e or s not in self.adjacency_list:
+    def bfs_recursive(self, node):
+        """ breadth first search recursive - find shortest path """
+        if node == self.finish_node or node not in self.adjacency_list:
             return
-        progress_state(s, self.state_consts, State.visiting, self.render_delay)
-        for edge in self.adjacency_list[s]:
-            if edge.state == State.visited or edge in self.queue:
+        progress_state(node, self.state_consts, State.VISITING, self.render_delay)
+        for edge in self.adjacency_list[node]:
+            if edge.state == State.VISITED or edge in self.queue:
                 continue
             self.queue.append(edge)
-            progress_state(edge, self.state_consts, State.queue, self.render_delay)
+            progress_state(edge, self.state_consts, State.QUEUE, self.render_delay)
             self.prev[edge] = self.queue[0]
-        progress_state(s, self.state_consts, State.visited, self.render_delay)
+        progress_state(node, self.state_consts, State.VISITED, self.render_delay)
         self.queue.pop(0)
         if not self.queue:
             return
-        self.bfs_recursive(self.queue[0], e)
+        self.bfs_recursive(self.queue[0])
 
     def backtrack(self, node):
         """ build shortest path """
         if node == self.start_node or node not in self.prev:
             return
         prev_node = self.prev[node]
-        progress_state(prev_node, self.state_consts, State.path, self.render_delay)
+        self.path.append(prev_node)
         self.backtrack(prev_node)
+
+    def visualise_path(self):
+        for node in reversed(self.path):
+            progress_state(node, self.state_consts, State.PATH, self.render_delay)
