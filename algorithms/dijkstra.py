@@ -81,9 +81,9 @@ class Dijkstra:
             if edge.state == State.VISITED:
                 continue
             if self.a_star:
-                new_dist = edge.cost + self.path_info[edge][self.heuristic_key]
+                new_dist = edge.weight + self.path_info[edge][self.heuristic_key]
             else:
-                new_dist = edge.cost + self.path_info[node][self.distance_key]
+                new_dist = edge.weight + self.path_info[node][self.distance_key]
             if new_dist < self.path_info[edge][self.distance_key]:
                 self.path_info[edge][self.prev_node_key] = node
                 if self.a_star:
