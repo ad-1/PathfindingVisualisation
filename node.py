@@ -1,6 +1,7 @@
 # Node object
 
 from state import State
+from math import inf
 
 
 class Node:
@@ -12,7 +13,7 @@ class Node:
         self.x2, self.y2 = x2, y2
         self.row, self.col = row, col
         self.idx = idx
-        self.cost = 1
+        self.weight = 1
         self._state = State.NORMAL
         self.connections = [(self.row - 1, self.col),
                             (self.row, self.col + 1),
@@ -29,8 +30,12 @@ class Node:
     @state.setter
     def state(self, val):
         """ set state """
-        state, render_delay = val
+        state, render_delay, w = val
         self._state = state
+        if state == State.WALL:
+            self.weight = inf
+        elif state != State.VISITED and state != State.VISITING and state != State.PATH and state != State.QUEUE:
+            self.weight = w
         self.dispatch(self, render_delay)
 
     def dispatch(self, node, render_time):

@@ -5,6 +5,7 @@ import requests
 import tkinter as tk
 import random
 import time
+from tkinter import messagebox
 from ttkthemes import themed_tk as theme
 from tkinter import ttk as tkk
 from PIL import ImageTk, Image
@@ -24,23 +25,18 @@ class Graph:
 
         self.algorithms = ['Breadth First Search', 'BFS Recursive', 'Depth First Search', 'DFS Recursive', 'Dijkstra', 'A*']
         self.solve_mode = 0
-        self.draw_modes = [1, 2, 3]
+        self.draw_modes = [1, 2, 3, 4]
         self.draw_mode = 1
-        self.is_solving = False
-        self.solved = False
-        self.last_rendered_node = None
-        self.start_node = None
-        self.finish_node = None
+        self.is_solving, self.solved = False, False
+        self.start_node, self.finish_node, self.last_rendered_node = None, None, None
         self.root = theme.ThemedTk()
         self.menu_frame = tkk.Frame(self.root)
-        self.graph_width = 1220
-        self.graph_height = 850
+        self.graph_width, self.graph_height = 1220, 850
         self.canvas = tk.Canvas(self.root, height=self.graph_height + 50, width=self.graph_width, bg='#333333')
         self.node_size = 20
-        self.n_cols = None
-        self.n_rows = None
-        self.nodes = None
-        self.flat_nodes = None
+        self.weight = 10
+        self.n_cols, self.n_rows = None, None
+        self.nodes, self.flat_nodes = None, None
         self.shapes = []
         self.wall_frequency = 0.05
         self.render_delay = 0
@@ -66,18 +62,12 @@ class Graph:
         self.canvas.bind('<B1-Motion>', self.node_operation)
         self.canvas.grid(row=0, column=1)
 
-    def clean_canvas(self):
-        """ delete all shapes from canvas"""
-        for shape in self.shapes:
-            self.canvas.delete(shape)
-        self.shapes = []
-
     def config_nodes(self, event=None):
         """ configure all nodes on the graph """
         if self.is_solving:
             return
         self.clean_canvas()
-        self.reset_stored_nodes()
+        self.reset_local_nodes()
         self.n_cols = int(self.graph_width // self.node_size)
         self.n_rows = int(self.graph_height // self.node_size)
         self.nodes = [[None for _ in range(0, self.n_cols)] for _ in range(0, self.n_rows)]
@@ -94,27 +84,63 @@ class Graph:
                 idx += 1
         self.flat_nodes = [node for row in self.nodes for node in row]
 
-    def reset_stored_nodes(self):
-        self.start_node = None
-        self.finish_node = None
-        self.last_rendered_node = None
+    def config_menu(self):
+        """ menu - user configurable settings for visualisation"""
+        self.menu_frame.grid(row=0, column=0, sticky='n')
+        menu_width = 18
+        self.tkk_btn(self.menu_frame, [('Visualise', self.validate_graph)], True)
+        self.display_logo()
+        current_algo = tk.StringVar()
+        current_algo.set(self.algorithms[self.solve_mode])
+        algorithms_menu = tk.OptionMenu(self.menu_frame, current_algo, *self.algorithms, command=self.algorithm_change)
+        algorithms_menu.config(width=menu_width)
+        self.tkk_label(self.menu_frame, ['Node Size'])
+        self.tkk_scaler(20, 60, self.change_node_size)
+        self.tkk_label(self.menu_frame, ['Wall Frequency'])
+        self.tkk_scaler(0.05, 0.5, self.change_wall_frequency)
+        self.tkk_btn(self.menu_frame, [('Generate Random Maze', self.random_maze),
+                                       ('Clear Graph', self.clear_graph),
+                                       ('Clear Wall', self.clear_walls_and_weights),
+                                       ('Clear Path', self.clear_path)], True)
+        rb = tk.IntVar()
+        rb.set(self.draw_mode)
+        self.tkk_rbtn([('Place Start Node', rb), ('Place Finish Node', rb), ('Draw Wall Node', rb), ('Draw Weighted Node', rb)])
+        self.tkk_label(self.menu_frame, ['Node Weight'])
+        callback = self.menu_frame.register(self.only_numeric_input)
+        tkk.Entry(self.menu_frame, validate="key", validatecommand=(callback, "%P")).insert(0, str(self.weight))
+        self.tkk_label(self.menu_frame, ['Graph Legend'])
+        state_keys = [(state.name, state.value) for state in State]
+        self.tkk_btn(self.menu_frame, state_keys, False)
+        for r, child in enumerate(self.menu_frame.winfo_children()):
+            pad = 0 if isinstance(child, tk.Button) else 5
+            child.grid_configure(row=r, column=0, sticky='ew', padx=pad, pady=pad)
+
+    def clean_canvas(self):
+        """ delete all shapes from canvas"""
+        for shape in self.shapes:
+            self.canvas.delete(shape)
+        self.shapes = []
+
+    def reset_local_nodes(self):
+        """ reset start, finish and last rendered nodes to None """
+        self.start_node, self.finish_node, self.last_rendered_node = None, None, None
 
     def clear_graph(self):
         """ reset node back to initial state """
         if self.is_solving:
             return
         self.solved = False
-        self.reset_stored_nodes()
+        self.reset_local_nodes()
         for node in self.flat_nodes:
             progress_state(node, [], State.NORMAL, self.render_delay)
 
-    def clear_walls(self):
-        """ clear all walls from graph """
+    def clear_walls_and_weights(self):
+        """ clear all walls and weights from graph """
         if self.is_solving:
             return
         self.solved = False
         for node in self.flat_nodes:
-            if node.state == State.WALL:
+            if node.state == State.WALL or node.state == State.WEIGHT:
                 progress_state(node, [], State.NORMAL, self.render_delay)
 
     def clear_path(self):
@@ -123,7 +149,9 @@ class Graph:
             return
         self.solved = False
         for node in self.flat_nodes:
-            if node.state == State.VISITED or \
+            if 1 < node.weight < inf:
+                self.render_weight(node, random_weight=False, current_weight=True)
+            elif node.state == State.VISITED or \
                     node.state == State.VISITING or \
                     node.state == State.QUEUE or \
                     node.state == State.PATH:
@@ -144,33 +172,17 @@ class Graph:
         image_label = tk.Label(self.menu_frame, image=img)
         image_label.img = img
 
-    def config_menu(self):
-        """ menu - user configurable settings for visualisation"""
-        self.menu_frame.grid()
-        menu_width = 18
-        self.tkk_btn(self.menu_frame, [('Visualise', self.validate_graph)], True)
-        self.display_logo()
-        current_algo = tk.StringVar()
-        current_algo.set(self.algorithms[self.solve_mode])
-        algorithms_menu = tk.OptionMenu(self.menu_frame, current_algo, *self.algorithms, command=self.algorithm_change)
-        algorithms_menu.config(width=menu_width)
-        self.tkk_label(self.menu_frame, ['Node Size'])
-        self.tkk_scaler(20, 60, self.change_node_size)
-        self.tkk_label(self.menu_frame, ['Wall Frequency'])
-        self.tkk_scaler(0.05, 0.5, self.change_wall_frequency)
-        self.tkk_btn(self.menu_frame, [('Generate Random Maze', self.random_maze),
-                                       ('Clear Graph', self.clear_graph),
-                                       ('Clear Wall', self.clear_walls),
-                                       ('Clear Path', self.clear_path)], True)
-        rb = tk.IntVar()
-        rb.set(self.draw_mode)
-        self.tkk_rbtn([('Place Start Node', rb), ('Place Finish Node', rb), ('Draw Weighted Node', rb)])
-        self.tkk_label(self.menu_frame, ['Graph Legend'])
-        state_keys = [(state.name, state.value) for state in State]
-        self.tkk_btn(self.menu_frame, state_keys, False)
-        for r, child in enumerate(self.menu_frame.winfo_children()):
-            pad = 0 if isinstance(child, tk.Button) else 5
-            child.grid_configure(row=r, column=0, sticky='ew', padx=pad, pady=pad)
+    def only_numeric_input(self, i):
+        try:
+            if i == '':
+                self.weight = inf
+            else:
+                self.weight = int(i)
+            return True
+        except Exception as e:
+            tk.messagebox.showerror('Weight Error', 'Please enter a positive integer for node weights or leave blank for wall')
+            print(e)
+            return False
 
     @staticmethod
     def tkk_btn(parent, btns, is_tkk):
@@ -214,7 +226,10 @@ class Graph:
             return
         for node in self.flat_nodes:
             if random.uniform(0, 1) < self.wall_frequency:
-                progress_state(node, [self.start_node, self.finish_node], State.WALL, self.render_delay)
+                if random.uniform(0, 1) < 0.5:
+                    progress_state(node, [self.start_node, self.finish_node], State.WALL, self.render_delay)
+                else:
+                    self.render_weight(node, random_weight=True, current_weight=False)
             else:
                 progress_state(node, [self.start_node, self.finish_node], State.NORMAL, self.render_delay)
 
@@ -240,6 +255,8 @@ class Graph:
             self.draw_mode = 2
         elif kp == '\'3\'':
             self.draw_mode = 3
+        elif kp == '\'4\'':
+            self.draw_mode = 4
         elif kp == '\'p\'':
             self.clear_path()
         elif kp == '\'c\'':
@@ -247,8 +264,8 @@ class Graph:
         elif kp == '\'m\'':
             self.random_maze()
         elif kp == '\'n\'':
-            self.clear_walls()
-        elif kp == '\'space\'':
+            self.clear_walls_and_weights()
+        elif kp == '\'v\'':
             self.validate_graph(True)
 
     def render_node(self, node, render_time):
@@ -275,42 +292,69 @@ class Graph:
         for node in self.flat_nodes:
             if node.x1 <= event.x <= node.x2 and node.y1 <= event.y <= node.y2:
                 if self.draw_mode == 1:
-                    self.update_start(node)
+                    self.update_start_node(node)
                 elif self.draw_mode == 2:
-                    self.update_finish(node)
+                    self.update_finish_node(node)
                 elif self.draw_mode == 3:
-                    self.update_wall(node)
+                    self.update_wall_node(node)
+                elif self.draw_mode == 4:
+                    self.update_weight_node(node)
                 return
 
-    def update_start(self, node):
+    def update_start_node(self, node):
         """ update starting node """
         if self.start_node is not None:
             progress_state(self.start_node, [self.finish_node], State.NORMAL, self.render_delay)
         progress_state(node, [self.finish_node], State.START, self.render_delay)
         self.start_node = node
         if self.solved:
-            self.validate_graph(False)
+            self.validate_graph(animate=False)
 
-    def update_finish(self, node):
+    def update_finish_node(self, node):
         """ update finishing node """
         if self.finish_node is not None:
             progress_state(self.finish_node, [self.start_node], State.NORMAL, self.render_delay)
         progress_state(node, [self.start_node], State.FINISH, self.render_delay)
         self.finish_node = node
         if self.solved:
-            self.validate_graph(False)
+            self.validate_graph(animate=False)
 
-    @staticmethod
-    def update_wall(node):
+    def update_wall_node(self, node):
         """ update node as wall or not """
-        if node.state != State.START and node.state != State.FINISH:
-            node.state = (State.WALL, 0) if node.state != State.WALL else (State.NORMAL, 0)
-            node.cost = inf if node.cost == 1 else inf
+        if node.state == State.WALL:
+            progress_state(node, [self.start_node, self.finish_node], State.NORMAL, self.render_delay)
+        elif node.state == State.NORMAL or node.state == State.WEIGHT:
+            progress_state(node, [self.start_node, self.finish_node], State.WALL, self.render_delay)
+
+    def update_weight_node(self, node):
+        """ update node as weighted or not """
+        if node.state == State.WEIGHT:
+            progress_state(node, [self.start_node, self.finish_node], State.NORMAL, self.render_delay)
+        elif node.state == State.NORMAL or node.state == State.WALL:
+            self.render_weight(node, random_weight=False, current_weight=False)
+
+    def render_weight(self, node, random_weight, current_weight):
+        if random_weight:
+            w = random.randrange(50)
+        elif current_weight:
+            w = node.weight
+        else:
+            w = self.weight
+        progress_state(node, [self.start_node, self.finish_node], State.WEIGHT, self.render_delay, weight=w)
+        self.canvas.create_text(node.x1 + (self.node_size / 2), node.y1 + (self.node_size / 2), fill="#333333", font="Times 11 bold",
+                                text=node.weight)
 
     def validate_graph(self, animate=True):
         """ validate the graph is ready to be solved """
-        if self.start_node is not None and self.finish_node is not None:
-            self.visualise_pathfinding(animate)
+        if self.start_node is None or self.finish_node is None:
+            return
+        max_recursive_node_size = 35
+        if (self.solve_mode == 1 or self.solve_mode == 3) and self.node_size < max_recursive_node_size:
+            messagebox.showwarning('Recursion Info', 'Unable to run Recursive function '
+                                                     'on node sizes less than {} due to Python recursion limit.'
+                                                     ' Please increase node size and try again.'.format(max_recursive_node_size))
+            return
+        self.visualise_pathfinding(animate)
 
     def visualise_pathfinding(self, animate):
         """ solve using selected algorithm """

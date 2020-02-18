@@ -7,7 +7,7 @@ class State(Enum):
     NORMAL = '#f6f4f2'
     START = '#71DE5F'
     FINISH = '#F15353'
-    WEIGHTED = '#eba173'
+    WEIGHT = '#eba173'
     WALL = '#434343'
     QUEUE = '#ebbfff'
     VISITING = '#fc03c6'
