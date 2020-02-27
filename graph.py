@@ -92,7 +92,7 @@ class Graph:
         self.display_logo()
         current_algo = tk.StringVar()
         current_algo.set(self.algorithms[self.solve_mode])
-        algorithms_menu = tk.OptionMenu(self.menu_frame, current_algo, *self.algorithms, command=self.algorithm_change)
+        algorithms_menu = tkk.OptionMenu(self.menu_frame, current_algo, self.algorithms[0], *self.algorithms, command=self.algorithm_change)
         algorithms_menu.config(width=menu_width)
         self.tkk_label(self.menu_frame, ['Node Size'])
         self.tkk_scaler(20, 60, self.change_node_size)
