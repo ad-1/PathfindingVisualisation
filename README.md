@@ -7,7 +7,7 @@ Think of a graph as a network of nodes. Types of graphs include logistic or road
 
 Breadth-first search (BFS) is an algorithm for traversing or searching tree or graph data structures. It starts at the tree root, and explores all neighbour nodes at the current level before proceeding to the nodes on the subsequent level.
 
-<img src="/images/bredth-first-search.gif" alt="BFS" width="500" >
+<img src="/images/breadth-first-search.gif" alt="BFS" width="500" >
 
 ## Depth First Search
 
@@ -25,5 +25,5 @@ Dijkstra's algorithm is an algorithm for finding the shortest paths between node
 
 A* algorithm improves the Dijkstra process by including extra information through a heuristic function that determines which paths to explore next.
 
-<img src="/images/AStar.gif" alt="A Star" width="500" >
+<img src="/images/astar.gif" alt="A Star" width="500" >
 
