@@ -1,5 +1,3 @@
-# Node object
-
 from state import State
 from math import inf
 

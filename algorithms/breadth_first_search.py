@@ -1,7 +1,7 @@
 # Breadth First Search - Shortest Path
 
-from helpers.adj_list import get_adj_list
-from helpers.progress_state import progress_state
+from get_adjacent_nodes import get_adj_list
+from progress_state import progress_state
 from state import State
 
 

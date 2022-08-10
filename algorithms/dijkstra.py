@@ -2,7 +2,7 @@
 
 from math import inf
 from state import State
-from helpers.progress_state import progress_state
+from progress_state import progress_state
 
 
 class Dijkstra:

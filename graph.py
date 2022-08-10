@@ -1,5 +1,3 @@
-# Graph in Tkinter for Pathfinding Visualisation
-
 import shutil
 import requests
 import tkinter as tk
@@ -13,7 +11,7 @@ from node import Node
 from algorithms.breadth_first_search import BFS
 from algorithms.depth_fist_search import DFS
 from algorithms.dijkstra import Dijkstra
-from helpers.progress_state import progress_state
+from progress_state import progress_state
 from state import State
 from math import inf
 
@@ -88,8 +86,10 @@ class Graph:
         """ menu - user configurable settings for visualisation"""
         self.menu_frame.grid(row=0, column=0, sticky='n')
         menu_width = 18
+        self.tkk_label(self.menu_frame, ['Start Program'])
         self.tkk_btn(self.menu_frame, [('Visualise', self.validate_graph)], True)
-        self.display_logo()
+        # self.display_logo()
+        self.tkk_label(self.menu_frame, ['Select Algorithm'])
         current_algo = tk.StringVar()
         current_algo.set(self.algorithms[self.solve_mode])
         algorithms_menu = tkk.OptionMenu(self.menu_frame, current_algo, self.algorithms[0], *self.algorithms, command=self.algorithm_change)
@@ -191,7 +191,7 @@ class Graph:
             if is_tkk:
                 tkk.Button(parent, text=text, command=cmd)
             else:
-                tk.Button(parent, text=text, highlightbackground=cmd, height=1, state='disabled')
+                tk.Button(parent, text=text, highlightbackground=cmd, height=2, state='disabled')
 
     @staticmethod
     def tkk_label(parent, text):
@@ -230,6 +230,7 @@ class Graph:
                     progress_state(node, [self.start_node, self.finish_node], State.WALL, self.render_delay)
                 else:
                     self.render_weight(node, random_weight=True, current_weight=False)
+                    # self.render_node(node, render_time=0)
             else:
                 progress_state(node, [self.start_node, self.finish_node], State.NORMAL, self.render_delay)
 
